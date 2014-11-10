@@ -82,8 +82,14 @@ def get_sqlite_file():
 
 
 def load_settings():
-    if not os.path.exists(get_config_dir()):
-        os.makedirs(get_config_dir())
+    config_dir = get_config_dir()
+    if not os.path.exists(config_dir):
+        os.makedirs(config_dir)
+
+    cache_dir = os.path.join(config_dir, "cache")
+    if not os.path.exists(cache_dir):
+        os.makedirs(cache_dir)
+    settings["cache_dir"] = cache_dir
 
     dbfile = get_sqlite_file()
     if not os.path.exists(dbfile):
