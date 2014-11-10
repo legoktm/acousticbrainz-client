@@ -30,6 +30,7 @@ class AcousticBrainz:
     def __init__(self):
         self.conn = sqlite3.connect(config.get_sqlite_file())
         self.verbose = False
+        self.session = requests.Session()
 
     def _update_progress(self, msg, status="...", colour=None):
         if colour is None:
@@ -89,7 +90,7 @@ class AcousticBrainz:
 
         host = config.settings["host"]
         url = compat.urlunparse(('http', host, '/%s/low-level' % recordingid, '', '', ''))
-        r = requests.post(url, data=featstr)
+        r = self.session.post(url, data=featstr)
         r.raise_for_status()
 
     def process_file(self, filepath):
