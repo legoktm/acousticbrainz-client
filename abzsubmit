@@ -10,9 +10,11 @@ from __future__ import print_function
 import sys
 from abz import acousticbrainz
 
+
 def main(paths):
+    ab = acousticbrainz.AcousticBrainz()
     for path in paths:
-        acousticbrainz.process(path)
+        ab.process(path)
     print()
 
 if __name__ == "__main__":
