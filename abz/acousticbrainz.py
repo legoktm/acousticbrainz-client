@@ -49,10 +49,21 @@ class AcousticBrainz:
         print()
         self._update_progress(msg, status, colour)
 
-    def add_to_filelist(self, filepath, reason=None):
-        query = """insert into filelog(filename, reason) values(?, ?)"""
+    def update_filelist(self, filepath, reason=None):
+        """
+        Attempts to upsert into the database
+        """
+        select_query = """select filename,reason from filelog where filename=?"""
         c = self.conn.cursor()
-        c.execute(query, (compat.decode(filepath), reason))
+        c.execute(select_query, (compat.decode(filepath),))
+        data = (compat.decode(filepath), reason)
+        if c.fetchall():
+            update_query = """update filelog set reason=? where filename=?"""
+            c = self.conn.cursor()
+            c.execute(update_query, data)
+        else:
+            insert_query = """insert into filelog(filename, reason) values(?, ?)"""
+            c.execute(insert_query, data)
         self.conn.commit()
 
     def is_valid_uuid(self, u):
@@ -123,11 +134,11 @@ class AcousticBrainz:
             try:
                 self.submit_features(recid, features)
             except requests.RequestException:  # Any general requests error
-                self.add_to_filelist(filepath, "offline")
+                self.update_filelist(filepath, "offline")
                 self._update_progress(filepath, ":| offline", self.GREEN)
                 return "offline"
             else:
-                self.add_to_filelist(filepath, "done")
+                self.update_filelist(filepath, "done")
                 self._update_progress(filepath, ":)", self.GREEN)
                 return "done"
         else:
@@ -189,12 +200,12 @@ class AcousticBrainz:
             self._update_progress(filepath, ":( nombid", self.RED)
             print()
             print(out)
-            self.add_to_filelist(filepath, "nombid")
+            self.update_filelist(filepath, "nombid")
         elif retcode == 1:
             self._update_progress(filepath, ":( extract", self.RED)
             print()
             print(out)
-            self.add_to_filelist(filepath, "extractor")
+            self.update_filelist(filepath, "extractor")
         elif retcode > 0 or retcode < 0:  # Unknown error, not 0, 1, 2
             self._update_progress(filepath, ":( unk %s" % retcode, self.RED)
             print()
@@ -206,7 +217,7 @@ class AcousticBrainz:
                         features = json.load(f)
                 except ValueError:
                     self._update_progress(filepath, ":( json", self.RED)
-                    self.add_to_filelist(filepath, "json")
+                    self.update_filelist(filepath, "json")
                     return
 
                 status = self.process_features(filepath, features)
