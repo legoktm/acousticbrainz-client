@@ -72,7 +72,10 @@ class AcousticBrainz:
         c = self.conn.cursor()
         r = c.execute(query, (compat.decode(filepath), ))
         rows = r.fetchall()
-        if rows[0][0]:
+        if not rows:
+            # Not in the database at all
+            return False
+        elif rows[0][0]:
             return rows[0][0]
         elif rows[0][0] is None:
             # Old style where reason is None
