@@ -136,10 +136,7 @@ class AcousticBrainz:
         :param filepath: filename to check
         :return: bool
         """
-        json_path = os.path.join(
-            config.settings['cache_dir'],
-            hashlib.md5(filepath.encode()).hexdigest() + '.json'
-        )
+        json_path = self.get_tmpname_for_file(filepath)
         if not os.path.exists(json_path):
             return False
         with open(json_path) as f:
@@ -163,9 +160,10 @@ class AcousticBrainz:
         self._start_progress(filepath)
         status = self.get_status(filepath)
         if status == 'offline':
-            self.handle_cached_result(filepath)
-            return
-        elif status is True or status == 'done':
+            status = self.handle_cached_result(filepath)
+            if status:  # False means we should handle it normally
+                return
+        if status is True or status == 'done':
             self._update_progress(filepath, ":) done", self.GREEN)
             return
         elif status is not False:
@@ -176,8 +174,10 @@ class AcousticBrainz:
         tmpname = self.get_tmpname_for_file(filepath)
         if os.path.exists(tmpname):
             # This should have been caught earlier but...
-            self.handle_cached_result(filepath)
-            return
+            if self.handle_cached_result(filepath):
+                # Success, exit early. If failed, run the
+                # extractor like normal.
+                return
         retcode, out = self.run_extractor(filepath, tmpname)
         if retcode == 2:
             self._update_progress(filepath, ":( nombid", self.RED)
