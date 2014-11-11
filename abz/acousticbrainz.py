@@ -144,7 +144,10 @@ class AcousticBrainz:
             return False
         with open(json_path) as f:
             features = json.load(f)
-        self.process_features(filepath, features)
+        result = self.process_features(filepath, features)
+        if result != "offline":
+            # If we're not still offline, get rid of our cached copy
+            os.unlink(json_path)
         return True
 
     def get_tmpname_for_file(self, filepath):
