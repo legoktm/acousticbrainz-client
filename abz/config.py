@@ -86,7 +86,7 @@ def load_settings():
     if not os.path.exists(config_dir):
         os.makedirs(config_dir)
 
-    cache_dir = os.path.join(config_dir, "cache")
+    cache_dir = os.path.expanduser("~/.cache/abzsubmit")
     if not os.path.exists(cache_dir):
         os.makedirs(cache_dir)
     settings["cache_dir"] = cache_dir
