@@ -55,15 +55,15 @@ class AcousticBrainz:
         """
         select_query = """select filename,reason from filelog where filename=?"""
         c = self.conn.cursor()
-        c.execute(select_query, (compat.decode(filepath),))
-        data = (compat.decode(filepath), reason)
+        decoded = compat.decode(filepath)
+        c.execute(select_query, (decoded,))
         if c.fetchall():
             update_query = """update filelog set reason=? where filename=?"""
             c = self.conn.cursor()
-            c.execute(update_query, data)
+            c.execute(update_query, (reason, decoded))
         else:
             insert_query = """insert into filelog(filename, reason) values(?, ?)"""
-            c.execute(insert_query, data)
+            c.execute(insert_query, (decoded, reason))
         self.conn.commit()
 
     def is_valid_uuid(self, u):
